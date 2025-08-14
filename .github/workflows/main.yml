@@ -24,7 +24,7 @@ jobs:
         ssh -o StrictHostKeyChecking=no -i ssh_key.pem $DOCKER_HOST << 'EOF'
           docker stop myapp || true
           docker rm myapp || true
-          cd /path/to/app
+          cd /home/ubuntu
           git pull origin main || true
           docker build -t myapp .
           docker run -d -p 80:80 --name myapp myapp
