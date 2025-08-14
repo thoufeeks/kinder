@@ -1,0 +1,31 @@
+name: Deploy Docker App (Self-Hosted to Remote Docker VM)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # Runner VM (build/control machine)
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Deploy to Remote Docker VM
+      env:
+        DOCKER_HOST: ${{ secrets.DOCKER_VM_HOST }}   # e.g. user@ip
+        SSH_KEY: ${{ secrets.DOCKER_VM_SSH_KEY }}    # private key
+      run: |
+        echo "$SSH_KEY" > ssh_key.pem
+        chmod 600 ssh_key.pem
+
+        ssh -o StrictHostKeyChecking=no -i ssh_key.pem $DOCKER_HOST << 'EOF'
+          docker stop myapp || true
+          docker rm myapp || true
+          cd /path/to/app
+          git pull origin main || true
+          docker build -t myapp .
+          docker run -d -p 80:80 --name myapp myapp
+        EOF
